@@ -563,6 +563,39 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /admin/courses/{courseId}/publish:
+    patch:
+      tags: [Courses]
+      summary: Publish an approved course
+      description: >
+        ADMIN only. Publishes a DRAFT course when its latest submitted
+        revision has been approved. Unsubmitted drafts, pending revisions,
+        and rejected latest revisions cannot be published.
+      x-roles: [ADMIN]
+      parameters:
+        - $ref: '#/components/parameters/CourseId'
+      responses:
+        '200':
+          description: Course published successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Course is not a draft or its latest submitted revision is not approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   # ==========================================
   # COURSE REVISIONS
   # ==========================================

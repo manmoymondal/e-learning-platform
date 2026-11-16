@@ -1103,6 +1103,8 @@ export const reviewCourseRevision = async (req, res) => {
                         reviewedAt: new Date()
                     }
                 });
+            }, {
+                timeout: 15000
             });
         }
 

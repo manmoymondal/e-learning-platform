@@ -11,7 +11,8 @@ import {
     getMyCourseDetails,
     getCourseCurriculum,
     getCourseStudents,
-    getAllCoursesForAdmin
+    getAllCoursesForAdmin,
+    publishCourse
 } from "../controllers/course.controller.js";
 
 import {
@@ -64,6 +65,13 @@ router.get(
     authenticate,
     authorize("ADMIN"),
     getAllCoursesForAdmin
+);
+
+router.patch(
+    "/admin/courses/:courseId/publish",
+    authenticate,
+    authorize("ADMIN"),
+    publishCourse
 );
 
 // ==========================================

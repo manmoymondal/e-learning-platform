@@ -965,3 +965,124 @@ export const getAllCoursesForAdmin = async (req, res) => {
         return sendError(res, 500, "Failed to retrieve courses");
     }
 };
+
+
+// ==========================================
+// 11. ADMIN: PUBLISH COURSE
+// PATCH /api/v1/admin/courses/:courseId/publish
+// ADMIN
+// ==========================================
+
+export const publishCourse = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+
+        if (!isValidUuid(courseId)) {
+            return sendError(res, 400, "Invalid course ID");
+        }
+
+        const course = await prisma.course.findUnique({
+            where: { id: courseId },
+            select: {
+                id: true,
+                status: true
+            }
+        });
+
+        if (!course) {
+            return sendError(res, 404, "Course not found");
+        }
+
+        if (course.status !== "DRAFT") {
+            return sendError(
+                res,
+                409,
+                "Only draft courses can be published"
+            );
+        }
+
+        // Only consider revisions that have actually been submitted.
+        const latestSubmittedRevision = await prisma.courseRevision.findFirst({
+            where: {
+                courseId,
+                submittedAt: {
+                    not: null
+                }
+            },
+            orderBy: [
+                { submittedAt: "desc" },
+                { createdAt: "desc" }
+            ],
+            select: {
+                id: true,
+                status: true
+            }
+        });
+
+        if (!latestSubmittedRevision) {
+            return sendError(
+                res,
+                409,
+                "Course must have a submitted and approved revision before publishing"
+            );
+        }
+
+        if (latestSubmittedRevision.status !== "APPROVED") {
+            return sendError(
+                res,
+                409,
+                "The latest submitted revision must be approved before publishing"
+            );
+        }
+
+        // Update only if the course is still a draft.
+        const result = await prisma.course.updateMany({
+            where: {
+                id: courseId,
+                status: "DRAFT"
+            },
+            data: {
+                status: "PUBLISHED",
+                publishedAt: new Date()
+            }
+        });
+
+        if (result.count === 0) {
+            return sendError(
+                res,
+                409,
+                "Course is no longer in draft status"
+            );
+        }
+
+        const publishedCourse = await prisma.course.findUnique({
+            where: { id: courseId },
+            include: {
+                instructor: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                },
+                category: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                }
+            }
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Course published successfully",
+            data: publishedCourse
+        });
+
+    } catch (error) {
+        console.error("Publish course error:", error);
+
+        return sendError(res, 500, "Failed to publish course");
+    }
+};
