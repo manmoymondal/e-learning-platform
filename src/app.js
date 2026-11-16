@@ -1,0 +1,57 @@
+import express from "express";
+import cors from "cors";
+import fs from "fs";
+import path from "path";
+import yaml from "yaml";
+import swaggerUi from "swagger-ui-express";
+import { fileURLToPath } from "url";
+import authRoutes from "./routes/auth.routes.js";
+import categoryRoutes from "./routes/category.routes.js";
+import courseRoutes from "./routes/course.routes.js";
+
+
+const app = express();
+
+// Resolve project directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectRoot = path.resolve(__dirname, "..");
+import userRoutes from "./routes/user.routes.js";
+
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/categories", categoryRoutes);
+app.use("/api/v1/users", userRoutes);
+app.use("/api/v1", courseRoutes);
+
+// Load OpenAPI documentation
+const openApiPath = path.join(projectRoot, "docs", "openapi.yaml");
+
+if (!fs.existsSync(openApiPath)) {
+    throw new Error("OpenAPI file not found: " + openApiPath);
+}
+
+const openApiDocument = yaml.parse(
+    fs.readFileSync(openApiPath, "utf8")
+);
+
+// Swagger UI
+app.use(
+    "/api-docs",
+    swaggerUi.serve,
+    swaggerUi.setup(openApiDocument)
+);
+
+// Health check
+app.get("/api/v1/health", (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: "E-Learning Platform API is running"
+    });
+});
+
+export default app;
