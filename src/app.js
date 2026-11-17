@@ -13,6 +13,7 @@ import courseRoutes from "./routes/course.routes.js";
 import enrollmentRoutes from "./routes/enrollment.routes.js";
 import learningRoutes from "./routes/learning.routes.js";
 import userRoutes from "./routes/user.routes.js";
+import profileRoutes from "./routes/profile.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
 
 const app = express();
@@ -37,6 +38,7 @@ app.use(
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/categories", categoryRoutes);
 app.use("/api/v1/users", userRoutes);
+app.use("/api/v1", profileRoutes);
 app.use("/api/v1", courseRoutes);
 app.use("/api/v1", enrollmentRoutes);
 app.use("/api/v1", learningRoutes);
