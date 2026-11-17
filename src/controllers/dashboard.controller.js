@@ -116,3 +116,114 @@ export const getStudentDashboard = async (req, res) => {
         });
     }
 };
+
+// GET /instructor/dashboard
+export const getInstructorDashboard = async (req, res) => {
+    try {
+        const instructorId = req.user.id;
+
+        const [
+            totalCourses,
+            publishedCourses,
+            pendingCourses,
+            activeStudents,
+            courses
+        ] = await Promise.all([
+            prisma.course.count({
+                where: {
+                    instructorId
+                }
+            }),
+
+            prisma.course.count({
+                where: {
+                    instructorId,
+                    status: "PUBLISHED"
+                }
+            }),
+
+            prisma.course.count({
+                where: {
+                    instructorId,
+                    revisions: {
+                        some: {
+                            status: "PENDING"
+                        }
+                    }
+                }
+            }),
+
+            prisma.enrollment.findMany({
+                where: {
+                    status: "ACTIVE",
+                    course: {
+                        instructorId
+                    }
+                },
+                distinct: ["studentId"],
+                select: {
+                    studentId: true
+                }
+            }),
+
+            prisma.course.findMany({
+                where: {
+                    instructorId
+                },
+                orderBy: {
+                    createdAt: "desc"
+                },
+                take: 5,
+                select: {
+                    id: true,
+                    title: true,
+                    description: true,
+                    thumbnail: true,
+                    difficulty: true,
+                    status: true,
+                    publishedAt: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    instructor: {
+                        select: {
+                            id: true,
+                            name: true,
+                            email: true,
+                            role: true,
+                            isActive: true,
+                            createdAt: true
+                        }
+                    },
+                    category: {
+                        select: {
+                            id: true,
+                            name: true,
+                            description: true,
+                            createdAt: true
+                        }
+                    }
+                }
+            })
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            message: "Instructor dashboard retrieved successfully",
+            data: {
+                totalCourses,
+                publishedCourses,
+                pendingCourses,
+                totalStudents: activeStudents.length,
+                courses
+            }
+        });
+    } catch (error) {
+        console.error("Instructor dashboard error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
+    }
+};
+
