@@ -227,3 +227,88 @@ export const getInstructorDashboard = async (req, res) => {
     }
 };
 
+/**
+ * GET /instructor/students
+ * Returns unique students with active enrollments in this instructor's courses.
+ */
+export const getInstructorStudents = async (req, res) => {
+    try {
+        const page = req.query.page === undefined
+            ? 1
+            : Number(req.query.page);
+
+        const limit = req.query.limit === undefined
+            ? 10
+            : Number(req.query.limit);
+
+        if (
+            !Number.isInteger(page) ||
+            !Number.isInteger(limit) ||
+            page < 1 ||
+            limit < 1 ||
+            limit > 100
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid pagination parameters"
+            });
+        }
+
+        const where = {
+            role: "STUDENT",
+            enrollments: {
+                some: {
+                    status: "ACTIVE",
+                    course: {
+                        is: {
+                            instructorId: req.user.id
+                        }
+                    }
+                }
+            }
+        };
+
+        const [students, total] = await Promise.all([
+            prisma.user.findMany({
+                where,
+                skip: (page - 1) * limit,
+                take: limit,
+                orderBy: {
+                    createdAt: "desc"
+                },
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                    isActive: true,
+                    createdAt: true
+                }
+            }),
+
+            prisma.user.count({
+                where
+            })
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            message: "Instructor students retrieved successfully",
+            data: students,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
+        });
+    } catch (error) {
+        console.error("Get instructor students error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to retrieve instructor students"
+        });
+    }
+};
+

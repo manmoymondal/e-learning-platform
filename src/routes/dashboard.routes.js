@@ -1,7 +1,8 @@
 import express from "express";
 import {
     getStudentDashboard,
-    getInstructorDashboard
+    getInstructorDashboard,
+    getInstructorStudents
 } from "../controllers/dashboard.controller.js";
 import { authenticate } from "../middlewares/authenticate.js";
 import { authorize } from "../middlewares/authorize.js";
@@ -20,6 +21,13 @@ router.get(
     authenticate,
     authorize("INSTRUCTOR"),
     getInstructorDashboard
+);
+
+router.get(
+    "/instructor/students",
+    authenticate,
+    authorize("INSTRUCTOR"),
+    getInstructorStudents
 );
 
 export default router;
