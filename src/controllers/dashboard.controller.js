@@ -312,3 +312,72 @@ export const getInstructorStudents = async (req, res) => {
     }
 };
 
+/**
+ * GET /admin/dashboard
+ * Returns platform-wide statistics for administrators.
+ */
+export const getAdminDashboard = async (req, res) => {
+    try {
+        const [
+            totalUsers,
+            totalStudents,
+            totalInstructors,
+            totalCourses,
+            publishedCourses,
+            pendingRevisions,
+            totalEnrollments
+        ] = await Promise.all([
+            prisma.user.count(),
+
+            prisma.user.count({
+                where: {
+                    role: "STUDENT"
+                }
+            }),
+
+            prisma.user.count({
+                where: {
+                    role: "INSTRUCTOR"
+                }
+            }),
+
+            prisma.course.count(),
+
+            prisma.course.count({
+                where: {
+                    status: "PUBLISHED"
+                }
+            }),
+
+            prisma.courseRevision.count({
+                where: {
+                    status: "PENDING"
+                }
+            }),
+
+            prisma.enrollment.count()
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            message: "Admin dashboard retrieved successfully",
+            data: {
+                totalUsers,
+                totalStudents,
+                totalInstructors,
+                totalCourses,
+                publishedCourses,
+                pendingRevisions,
+                totalEnrollments
+            }
+        });
+    } catch (error) {
+        console.error("Admin dashboard error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
+    }
+};
+
