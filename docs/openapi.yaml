@@ -2229,7 +2229,34 @@ components:
             recentCourses:
               type: array
               items:
-                $ref: '#/components/schemas/Enrollment'
+                $ref: '#/components/schemas/DashboardEnrollment'
+
+    DashboardEnrollment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        course:
+          $ref: '#/components/schemas/Course'
+        status:
+          $ref: '#/components/schemas/EnrollmentStatus'
+        enrolledAt:
+          type: string
+          format: date-time
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
+        progress:
+          type: object
+          properties:
+            totalLessons:
+              type: integer
+            completedLessons:
+              type: integer
+            progressPercentage:
+              type: number
 
     InstructorDashboardResponse:
       type: object

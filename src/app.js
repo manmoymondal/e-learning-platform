@@ -15,6 +15,7 @@ import learningRoutes from "./routes/learning.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import profileRoutes from "./routes/profile.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.use("/api/v1", courseRoutes);
 app.use("/api/v1", enrollmentRoutes);
 app.use("/api/v1", learningRoutes);
 app.use("/api/v1", uploadRoutes);
+app.use("/api/v1", dashboardRoutes);
 
 // Load OpenAPI documentation
 const openApiPath = path.join(
